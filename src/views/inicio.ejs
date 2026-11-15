@@ -1,0 +1,28 @@
+<%- include('partials/header') %>
+<section class="row align-items-center g-4 py-3">
+  <div class="col-md-5 d-flex justify-content-center"><div class="logo-circulo" role="img" aria-label="Logo del taller">🔧</div></div>
+  <div class="col-md-7">
+    <h1 class="fw-bold text-primary">Taller Mecánico FIME</h1>
+    <p class="fs-5 fst-italic text-muted">Tu auto en buenas manos, tu tiempo bien aprovechado.</p>
+    <h2 class="h5 mt-4">Misión</h2>
+    <p>Brindar servicio mecánico confiable, transparente y puntual, con seguimiento claro del estado de cada vehículo para que el cliente siempre sepa qué sucede con su auto.</p>
+    <h2 class="h5">Visión</h2>
+    <p>Ser el taller de referencia de la región por la calidad de su trabajo y por una atención digital sin llamadas ni esperas innecesarias.</p>
+    <% if (!user) { %><a class="btn btn-primary me-2" href="/registro">Crear cuenta</a><a class="btn btn-outline-primary" href="/servicios">Ver servicios</a><% } %>
+  </div>
+</section>
+<% if (resenas.length) { %>
+<section class="mt-5">
+  <h2 class="h4 mb-3">Opiniones de nuestros clientes</h2>
+  <div class="row g-3">
+    <% resenas.forEach(r => { %>
+      <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body">
+        <div class="estrellas"><%= '★'.repeat(r.calificacion) %><%= '☆'.repeat(5 - r.calificacion) %></div>
+        <p class="mb-2"><%= r.comentario || 'Sin comentario.' %></p>
+        <small class="text-muted">— <%= r.nombre %></small>
+      </div></div></div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+<%- include('partials/footer') %>

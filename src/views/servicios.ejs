@@ -1,0 +1,24 @@
+<%- include('partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Nuestros servicios</h1>
+<% const nombres = Object.keys(categorias); %>
+<% if (!nombres.length) { %><div class="alert alert-info">Por el momento no hay servicios disponibles.</div><% } %>
+<div class="row g-4">
+  <% nombres.forEach(cat => { %>
+    <div class="col-lg-6">
+      <table class="table table-striped tabla-azul align-middle">
+        <thead><tr><th colspan="3"><%= cat %></th></tr>
+          <tr><th>Servicio</th><th class="text-nowrap">Duración</th><th class="text-end">Costo</th></tr></thead>
+        <tbody>
+          <% categorias[cat].forEach(s => { %>
+            <tr>
+              <td><strong><%= s.nombre %></strong><% if (s.descripcion) { %><br><small class="text-muted"><%= s.descripcion %></small><% } %></td>
+              <td class="text-nowrap"><%= s.duracion_min %> min</td>
+              <td class="text-end text-nowrap"><%= h.dinero(s.precio) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% }) %>
+</div>
+<%- include('partials/footer') %>

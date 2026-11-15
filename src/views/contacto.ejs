@@ -1,0 +1,12 @@
+<%- include('partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3 text-center">Contáctanos</h1>
+<% if (!contacto) { %><div class="alert alert-info">Aún no hay datos de contacto registrados.</div><% } else { %>
+<div class="tarjeta-azul p-4 mx-auto" style="max-width:640px">
+  <% if (contacto.telefono) { %><p class="mb-2"><strong>Teléfono:</strong> <%= contacto.telefono %></p><% } %>
+  <% if (contacto.correo) { %><p class="mb-2"><strong>Correo:</strong> <%= contacto.correo %></p><% } %>
+  <% if (contacto.facebook_url) { %><p class="mb-2"><strong>Facebook:</strong> <a class="text-white" href="<%= contacto.facebook_url %>" target="_blank" rel="noopener"><%= contacto.facebook_url %></a></p><% } %>
+  <% if (contacto.direccion) { %><p class="mb-2"><strong>Dirección:</strong> <%= contacto.direccion %></p><% } %>
+  <% if (contacto.maps_url) { %><a class="btn btn-light btn-sm mt-2" href="<%= contacto.maps_url %>" target="_blank" rel="noopener">Ver en Google Maps</a><% } %>
+</div>
+<% } %>
+<%- include('partials/footer') %>

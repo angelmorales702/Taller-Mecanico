@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Mi cuenta</h1>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="tarjeta-azul p-4">
+      <h2 class="h5 mb-3">Datos de mi cuenta</h2>
+      <% if (errores.length) { %><div class="alert alert-danger"><ul class="mb-0"><% errores.forEach(e => { %><li><%= e %></li><% }) %></ul></div><% } %>
+      <form method="post" action="/cuenta" class="row g-3" novalidate>
+        <div class="col-md-6"><label class="form-label" for="nombre">Nombre</label><input class="form-control" id="nombre" name="nombre" maxlength="60" value="<%= cuenta.nombre %>" required></div>
+        <div class="col-md-6"><label class="form-label" for="apellidos">Apellidos</label><input class="form-control" id="apellidos" name="apellidos" maxlength="80" value="<%= cuenta.apellidos %>" required></div>
+        <div class="col-12"><label class="form-label" for="telefono">Teléfono (10 dígitos)</label><input class="form-control" id="telefono" name="telefono" inputmode="numeric" maxlength="10" value="<%= cuenta.telefono || '' %>" required></div>
+        <div class="col-12"><label class="form-label" for="email">Correo</label><input type="email" class="form-control" id="email" name="email" maxlength="100" value="<%= cuenta.email %>" required></div>
+        <div class="col-12 small">Usuario: <strong><%= cuenta.usuario %></strong> · Rol: <strong><%= h.ROLES[cuenta.id_rol] %></strong><% if (cuenta.especialidad) { %> · Especialidad: <strong><%= cuenta.especialidad %></strong><% } %></div>
+        <div class="col-12"><button class="btn btn-dark">Modificar datos</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="tarjeta-azul-claro p-4">
+      <h2 class="h5 mb-3">Actualizar contraseña</h2>
+      <% if (erroresPass.length) { %><div class="alert alert-danger"><ul class="mb-0"><% erroresPass.forEach(e => { %><li><%= e %></li><% }) %></ul></div><% } %>
+      <form method="post" action="/cuenta/password" novalidate>
+        <label class="form-label" for="actual">Contraseña actual</label><input type="password" class="form-control mb-3" id="actual" name="actual" required>
+        <label class="form-label" for="nueva">Nueva contraseña (mín. 8)</label><input type="password" class="form-control mb-3" id="nueva" name="nueva" minlength="8" required>
+        <label class="form-label" for="confirmar">Confirmar nueva contraseña</label><input type="password" class="form-control mb-3" id="confirmar" name="confirmar" minlength="8" required>
+        <button class="btn btn-primary">Actualizar contraseña</button>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('partials/footer') %>

@@ -1,0 +1,18 @@
+<%- include('partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Horarios de atención</h1>
+<div class="table-responsive" style="max-width:640px">
+  <table class="table table-striped tabla-azul align-middle">
+    <thead><tr><th>Día</th><th>Horario</th></tr></thead>
+    <tbody>
+      <% semana.forEach(d => { %>
+        <tr><td><%= d.nombre %></td>
+          <td><% if (d.abierto) { %><%= h.hora12(d.apertura) %> – <%= h.hora12(d.cierre) %><% } else { %><span class="text-danger">Cerrado</span><% } %></td></tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% if (festivos.length) { %>
+  <h2 class="h5 mt-4">Próximos días especiales</h2>
+  <ul><% festivos.forEach(f => { %><li><strong><%= f.fecha_especial %></strong> — <%= f.descripcion || 'Día especial' %></li><% }) %></ul>
+<% } %>
+<%- include('partials/footer') %>
