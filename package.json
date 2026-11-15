@@ -1,0 +1,19 @@
+{
+  "name": "taller-mecanico",
+  "version": "1.0.0",
+  "description": "Sistema web de reservación de servicios para un taller mecánico (Proyecto final Programación Web, UANL FIME)",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "setup": "node db/setup.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mysql2": "^3.11.5"
+  }
+}
