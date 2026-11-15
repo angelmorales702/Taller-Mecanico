@@ -1,0 +1,46 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Mis citas asignadas</h1>
+<ul class="nav nav-pills mb-3">
+  <% [['hoy', 'Citas de hoy'], ['semana', 'Citas de la semana'], ['todas', 'Todas']].forEach(([v, n]) => { %>
+    <li class="nav-item"><a class="nav-link <%= rango === v ? 'active' : '' %>" href="/mecanico/citas?rango=<%= v %>"><%= n %></a></li>
+  <% }) %>
+</ul>
+<div class="table-responsive">
+  <table class="table table-striped tabla-azul align-middle small">
+    <thead><tr><th>Fecha</th><th>Vehículo</th><th>Cliente</th><th>Servicios</th><th>Falla reportada</th><th>Estatus</th><th>Acciones</th></tr></thead>
+    <tbody>
+      <% if (!citas.length) { %><tr><td colspan="7" class="text-center text-muted">No tienes citas asignadas en este periodo.</td></tr><% } %>
+      <% citas.forEach(c => { %>
+        <tr>
+          <td class="text-nowrap"><%= c.fecha_hora.slice(0, 10) %><br><%= h.hora12(c.fecha_hora.slice(11)) %></td>
+          <td><%= c.marca %> <%= c.modelo %><br><span class="text-muted"><%= c.placas %></span></td>
+          <td><%= c.cliente %><br><span class="text-muted"><%= c.telefono %></span></td>
+          <td><%= c.servicios %></td>
+          <td><%= c.observaciones || '—' %></td>
+          <td><span class="badge text-bg-<%= c.estatus_vehiculo === 'Entregado' ? 'success' : 'primary' %>"><%= c.estatus_vehiculo %></span></td>
+          <td class="text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="/mecanico/citas?rango=<%= rango %>&historial=<%= c.id_vehiculo %>#historial">Ver historial del auto</a>
+            <a class="btn btn-sm btn-primary" href="/mecanico/orden?cita=<%= c.id_cita %>">Abrir orden de trabajo ➔</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<% if (historial) { %>
+<section id="historial" class="mt-4">
+  <h2 class="h5">Historial de <%= histVeh.marca %> <%= histVeh.modelo %> (<%= histVeh.placas %>)</h2>
+  <div class="table-responsive">
+    <table class="table table-striped tabla-azul small align-middle">
+      <thead><tr><th>Fecha</th><th>Servicios</th><th>Estatus</th></tr></thead>
+      <tbody>
+        <% historial.forEach(c => { %>
+          <tr><td><%= c.fecha_hora.slice(0, 10) %></td><td><%= c.servicios %></td><td><%= c.estatus_cita %> · <%= c.estatus_vehiculo %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<% } %>
+<%- include('../partials/footer') %>

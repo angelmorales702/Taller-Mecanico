@@ -1,0 +1,147 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Orden de trabajo</h1>
+
+<% if (!cita) { %>
+  <div class="alert alert-info">No tienes órdenes asignadas. El administrador te las asigna desde su panel. <a href="/mecanico/citas">Ver mis citas</a>.</div>
+<% } else { %>
+<form class="row g-2 align-items-end mb-4" method="get" action="/mecanico/orden">
+  <div class="col-md-8">
+    <label class="form-label fw-bold">Orden / cita</label>
+    <select class="form-select" name="cita" onchange="this.form.submit()">
+      <% lista.forEach(c => { %>
+        <option value="<%= c.id_cita %>" <%= c.id_cita === cita.id_cita ? 'selected' : '' %>>#<%= c.id_cita %> · <%= c.fecha_hora.slice(0, 10) %> · <%= c.marca %> <%= c.modelo %> (<%= c.placas %>)<%= c.id_estatus_vehiculo === 6 ? ' · Entregado' : '' %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-md-4"><noscript><button class="btn btn-primary">Ver</button></noscript></div>
+</form>
+
+<div class="tarjeta-azul p-4 mb-4">
+  <div class="row g-2">
+    <div class="col-md-4"><div class="small">Vehículo</div><strong><%= cita.marca %> <%= cita.modelo %> <%= cita.anio %> · <%= cita.placas %></strong><% if (cita.color) { %><div class="small"><%= cita.color %></div><% } %></div>
+    <div class="col-md-4"><div class="small">Cliente</div><strong><%= cita.cliente %></strong><div class="small"><%= cita.telefono %></div></div>
+    <div class="col-md-4"><div class="small">Fecha y hora</div><strong><%= cita.fecha_hora.slice(0, 10) %> · <%= h.hora12(cita.fecha_hora.slice(11)) %></strong></div>
+    <div class="col-12"><div class="small">Servicios</div><%= servicios.map(s => s.nombre).join(', ') %></div>
+    <div class="col-12"><div class="small">Falla reportada</div><%= cita.observaciones || '—' %></div>
+    <% if (cita.llamada_solicitada) { %><div class="col-12"><span class="badge text-bg-info">☎ El cliente pidió que lo llamen</span></div><% } %>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <h2 class="h5">Actualizar estatus</h2>
+    <% if (cerrada) { %>
+      <div class="alert alert-secondary">Esta orden está <strong><%= cita.estatus_cita === 'Cancelada' ? 'cancelada' : 'entregada' %></strong>.</div>
+    <% } %>
+    <form class="tarjeta-azul-claro p-3 mb-3" method="post" action="/mecanico/orden/<%= cita.id_cita %>/estatus">
+      <label class="form-label">Nuevo estatus <span class="text-muted small">(actual: <%= cita.estatus_vehiculo %>)</span></label>
+      <select class="form-select mb-2" name="estatus" required <%= cita.estatus_cita === 'Cancelada' ? 'disabled' : '' %>>
+        <% estatus.forEach(e => { %><option value="<%= e.id_estatus_vehiculo %>" <%= e.id_estatus_vehiculo === cita.id_estatus_vehiculo ? 'selected' : '' %>><%= e.nombre %></option><% }) %>
+      </select>
+      <label class="form-label">Diagnóstico / comentario técnico (lo verá el cliente)</label>
+      <textarea class="form-control mb-2" name="comentario" rows="3" maxlength="255" required <%= cita.estatus_cita === 'Cancelada' ? 'disabled' : '' %>></textarea>
+      <button class="btn btn-primary" <%= cita.estatus_cita === 'Cancelada' ? 'disabled' : '' %>>Guardar nuevo estatus en línea de tiempo</button>
+    </form>
+
+    <h2 class="h5">Historial de estados</h2>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul small align-middle">
+        <thead><tr><th>Fecha</th><th>Estatus</th><th>Comentario</th></tr></thead>
+        <tbody>
+          <% bitacora.forEach(b => { %>
+            <tr><td class="text-nowrap"><%= b.fecha_hora.slice(0, 16) %></td><td><%= b.estatus %></td><td><%= b.comentario %><br><span class="text-muted"><%= b.autor %></span></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <h2 class="h5">Servicios contratados</h2>
+    <ul class="list-group mb-3">
+      <% servicios.forEach(s => { %><li class="list-group-item d-flex justify-content-between small"><%= s.nombre %><span><%= h.dinero(s.precio_aplicado) %></span></li><% }) %>
+    </ul>
+  </div>
+</div>
+
+<section id="refacciones" class="mt-4 pt-2 border-top">
+  <h2 class="h4 text-primary fw-bold">Consumo de refacciones</h2>
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <h3 class="h6">Almacén interno</h3>
+      <form class="input-group mb-2" method="get" action="/mecanico/orden#refacciones">
+        <input type="hidden" name="cita" value="<%= cita.id_cita %>">
+        <input class="form-control" name="q" value="<%= q %>" placeholder="Buscar pieza en el inventario" aria-label="Buscar">
+        <button class="btn btn-primary">Buscar</button>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-striped tabla-azul small align-middle">
+          <thead><tr><th>Pieza</th><th>Stock</th><th>Costo</th><th>Usar</th></tr></thead>
+          <tbody>
+            <% if (!productos.length) { %><tr><td colspan="4" class="text-center text-muted">Sin resultados.</td></tr><% } %>
+            <% productos.forEach(p => { %>
+              <tr>
+                <td><%= p.nombre %></td>
+                <td><span class="badge text-bg-<%= p.cantidad === 0 ? 'danger' : (p.cantidad <= p.stock_minimo ? 'warning' : 'success') %>"><%= p.cantidad %></span></td>
+                <td><%= h.dinero(p.costo) %></td>
+                <td>
+                  <% if (!cerrada && p.cantidad > 0) { %>
+                  <form class="d-flex gap-1" method="post" action="/mecanico/orden/<%= cita.id_cita %>/refaccion/almacen">
+                    <input type="hidden" name="id_producto" value="<%= p.id_producto %>">
+                    <input class="form-control form-control-sm" style="width: 70px" type="number" name="cantidad" min="1" max="<%= p.cantidad %>" value="1" aria-label="Cantidad">
+                    <button class="btn btn-sm btn-dark text-nowrap">+ Descontar y cargar</button>
+                  </form>
+                  <% } else { %><span class="text-muted">—</span><% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <h3 class="h6">Pieza externa sobre pedido (cargo extra)</h3>
+      <form class="tarjeta-azul-claro p-3" method="post" action="/mecanico/orden/<%= cita.id_cita %>/refaccion/externa">
+        <label class="form-label">Descripción</label>
+        <input class="form-control mb-2" name="descripcion" maxlength="150" required <%= cerrada ? 'disabled' : '' %>>
+        <div class="row g-2 mb-2">
+          <div class="col-5"><label class="form-label">Cantidad</label><input class="form-control" type="number" name="cantidad" min="1" value="1" required <%= cerrada ? 'disabled' : '' %>></div>
+          <div class="col-7"><label class="form-label">Costo unitario</label><input class="form-control" name="costo" inputmode="decimal" placeholder="0.00" required <%= cerrada ? 'disabled' : '' %>></div>
+        </div>
+        <button class="btn btn-primary" <%= cerrada ? 'disabled' : '' %>>+ Agregar cargo extra sujeto a aprobación</button>
+        <div class="small text-muted mt-2">El cliente debe aprobarlo en su seguimiento.</div>
+      </form>
+    </div>
+  </div>
+
+  <h3 class="h6 mt-4">Refacciones cargadas a la orden</h3>
+  <div class="table-responsive">
+    <table class="table table-striped tabla-azul small align-middle">
+      <thead><tr><th>Pieza</th><th>Origen</th><th>Cant.</th><th>Costo</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        <% if (!refacciones.length) { %><tr><td colspan="6" class="text-center text-muted">Aún no hay refacciones en esta orden.</td></tr><% } %>
+        <% refacciones.forEach(r => { %>
+          <tr>
+            <td><%= r.descripcion %></td>
+            <td><%= r.id_producto ? 'Almacén' : 'Externa' %></td>
+            <td><%= r.cantidad %></td>
+            <td><%= h.dinero(r.costo * r.cantidad) %></td>
+            <td><% if (r.aprobada === 1) { %><span class="badge text-bg-success">Aprobada</span>
+                <% } else if (r.aprobada === 0) { %><span class="badge text-bg-secondary">Rechazada</span>
+                <% } else { %><span class="badge text-bg-warning">Pendiente del cliente</span><% } %></td>
+            <td>
+              <% if (!cerrada && !(r.id_producto === null && r.aprobada === 1)) { %>
+              <form method="post" action="/mecanico/orden/<%= cita.id_cita %>/refaccion/<%= r.id_refaccion %>/quitar" onsubmit="return confirm('¿Quitar este cargo?')">
+                <button class="btn btn-sm btn-outline-danger">Quitar</button>
+              </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<% } %>
+<%- include('../partials/footer') %>
