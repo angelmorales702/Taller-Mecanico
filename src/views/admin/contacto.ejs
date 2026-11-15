@@ -1,0 +1,60 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">CRUD Contacto y reseñas</h1>
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="tarjeta-azul p-4">
+      <h2 class="h5 text-center mb-3">Información pública de contacto</h2>
+      <% errores.forEach(e => { %><div class="alert alert-danger py-2 small"><%= e %></div><% }) %>
+      <form method="post" action="/admin/contacto/guardar" novalidate>
+        <label class="form-label">Teléfono (10 dígitos)</label>
+        <input class="form-control mb-2" name="telefono" maxlength="10" inputmode="numeric" value="<%= form.telefono || '' %>" required>
+        <label class="form-label">Correo</label>
+        <input class="form-control mb-2" name="correo" maxlength="100" value="<%= form.correo || '' %>" required>
+        <label class="form-label">Dirección</label>
+        <input class="form-control mb-2" name="direccion" maxlength="200" value="<%= form.direccion || '' %>" required>
+        <label class="form-label">Facebook (URL, opcional)</label>
+        <input class="form-control mb-2" name="facebook_url" maxlength="255" placeholder="https://facebook.com/..." value="<%= form.facebook_url || '' %>">
+        <label class="form-label">Google Maps (URL, opcional)</label>
+        <input class="form-control mb-3" name="maps_url" maxlength="500" placeholder="https://maps.google.com/..." value="<%= form.maps_url || '' %>">
+        <div class="text-center"><button class="btn btn-dark">Actualizar información pública de contacto</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <h2 class="h5">Reseñas recibidas <span class="badge text-bg-light"><%= total %></span></h2>
+    <p class="small text-muted">Las escriben los clientes. Aquí solo decides si se muestran en la pantalla de Inicio.</p>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul align-middle small">
+        <thead><tr><th>Fecha</th><th>Cliente / vehículo</th><th>Mecánico</th><th>Calificación</th><th>Comentario</th><th>En Inicio</th></tr></thead>
+        <tbody>
+          <% if (!resenas.length) { %><tr><td colspan="6" class="text-center text-muted">Aún no hay reseñas.</td></tr><% } %>
+          <% resenas.forEach(r => { %>
+            <tr class="<%= r.visible ? '' : 'fila-inactiva' %>">
+              <td class="text-nowrap"><%= r.fecha.slice(0, 10) %></td>
+              <td><%= r.cliente %><br><span class="text-muted"><%= r.vehiculo %></span></td>
+              <td><%= r.mecanico || '—' %></td>
+              <td class="estrellas text-nowrap"><%= '★'.repeat(r.calificacion) %><%= '☆'.repeat(5 - r.calificacion) %></td>
+              <td><%= r.comentario || '—' %></td>
+              <td>
+                <form method="post" action="/admin/contacto/resenas/<%= r.id_resena %>/visible">
+                  <input type="hidden" name="pagina" value="<%= actual %>">
+                  <input type="hidden" name="visible" value="<%= r.visible ? 0 : 1 %>">
+                  <button class="btn btn-sm btn-outline-<%= r.visible ? 'success' : 'secondary' %> text-nowrap"><%= r.visible ? 'Visible · Ocultar' : 'Oculta · Mostrar' %></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (paginas > 1) { %>
+    <nav aria-label="Páginas de reseñas"><ul class="pagination pagination-sm">
+      <li class="page-item <%= actual === 1 ? 'disabled' : '' %>"><a class="page-link" href="/admin/contacto?pagina=<%= actual - 1 %>">‹</a></li>
+      <% for (let p = 1; p <= paginas; p++) { %><li class="page-item <%= p === actual ? 'active' : '' %>"><a class="page-link" href="/admin/contacto?pagina=<%= p %>"><%= p %></a></li><% } %>
+      <li class="page-item <%= actual === paginas ? 'disabled' : '' %>"><a class="page-link" href="/admin/contacto?pagina=<%= actual + 1 %>">›</a></li>
+    </ul></nav>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>

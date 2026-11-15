@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+<% const MESES = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; %>
+<h1 class="h3 text-primary fw-bold mb-3">Reportes estadísticos</h1>
+
+<form class="row g-2 align-items-end mb-4" method="get" action="/admin/reportes">
+  <div class="col-sm-4 col-md-3"><label class="form-label fw-bold">Mes</label>
+    <select class="form-select" name="mes"><% for (let m = 1; m <= 12; m++) { %><option value="<%= m %>" <%= m === mes ? 'selected' : '' %>><%= MESES[m] %></option><% } %></select></div>
+  <div class="col-sm-4 col-md-3"><label class="form-label fw-bold">Año</label>
+    <select class="form-select" name="anio"><% listaAnios.forEach(a => { %><option value="<%= a %>" <%= a === anio ? 'selected' : '' %>><%= a %></option><% }) %></select></div>
+  <div class="col-sm-4 col-md-3"><button class="btn btn-primary w-100">Actualizar reporte</button></div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="tarjeta-azul p-3 h-100"><div class="small">Ingresos de <%= MESES[mes] %></div><div class="fs-4 fw-bold"><%= h.dinero(tarjetas.ingresos) %></div><div class="small">Solo citas entregadas</div></div></div>
+  <div class="col-6 col-lg-3"><div class="tarjeta-azul p-3 h-100"><div class="small">Citas del mes</div><div class="fs-4 fw-bold"><%= tarjetas.citas %></div><div class="small"><%= tarjetas.entregadas %> entregadas · canceladas no cuentan</div></div></div>
+  <div class="col-6 col-lg-3"><div class="tarjeta-azul p-3 h-100"><div class="small">Calificación promedio</div>
+    <div class="fs-4 fw-bold"><%= tarjetas.calificacion === null ? '—' : tarjetas.calificacion.toFixed(1) + ' ★' %></div><div class="small"><%= tarjetas.resenas %> reseña(s)</div></div></div>
+  <div class="col-6 col-lg-3"><div class="tarjeta-azul p-3 h-100"><div class="small">Alertas de stock</div><div class="fs-4 fw-bold"><%= alertas %></div><div class="small">Stock bajo o agotado</div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <h2 class="h5">Ingresos y citas por mes · <%= anio %></h2>
+    <div class="tarjeta-azul-claro p-3">
+      <div class="d-flex align-items-end gap-1" style="height: 200px;" role="img" aria-label="Gráfica de ingresos y citas por mes">
+        <% porMes.forEach(m => { %>
+          <div class="flex-fill d-flex flex-column justify-content-end align-items-center h-100 <%= m.mes === mes ? 'fw-bold' : '' %>" title="<%= MESES[m.mes] %>: <%= h.dinero(m.ingresos) %> · <%= m.citas %> citas">
+            <div class="small text-muted"><%= m.citas || '' %></div>
+            <div class="d-flex align-items-end gap-1 w-100 justify-content-center" style="height: 80%;">
+              <div class="rounded-top" style="width: 40%; height: <%= Math.round(m.ingresos / maxIngresos * 100) %>%; min-height: <%= m.ingresos > 0 ? 3 : 0 %>px; background: #1f5f9a;"></div>
+              <div class="rounded-top" style="width: 40%; height: <%= Math.round(m.citas / maxCitas * 100) %>%; min-height: <%= m.citas > 0 ? 3 : 0 %>px; background: #f5a623;"></div>
+            </div>
+            <div class="small"><%= MESES[m.mes].slice(0, 3) %></div>
+          </div>
+        <% }) %>
+      </div>
+      <div class="small mt-2"><span style="color:#1f5f9a">■</span> Ingresos (máx. <%= h.dinero(maxIngresos) %>) &nbsp; <span style="color:#f5a623">■</span> Citas (máx. <%= maxCitas %>)</div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <h2 class="h5">Estatus del inventario</h2>
+    <div class="tarjeta-azul-claro p-3">
+      <% [['Disponible', 'success'], ['Stock Bajo', 'warning'], ['Agotado', 'danger']].forEach(([n, c]) => { %>
+        <div class="d-flex justify-content-between small"><span><%= n %></span><strong><%= stock[n] %></strong></div>
+        <div class="progress mb-2" style="height: 14px;"><div class="progress-bar bg-<%= c %>" style="width: <%= totalInv ? Math.round(stock[n] / totalInv * 100) : 0 %>%"></div></div>
+      <% }) %>
+      <div class="small text-muted"><%= totalInv %> insumos activos</div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5">Rendimiento de mecánicos · <%= MESES[mes] %> <%= anio %></h2>
+<div class="table-responsive">
+  <table class="table table-striped tabla-azul align-middle small">
+    <thead><tr><th>Mecánico</th><th>Especialidad</th><th>Citas asignadas</th><th>Órdenes concluidas</th><th>Ingresos generados</th><th>Calificación</th></tr></thead>
+    <tbody>
+      <% if (!mecanicos.length) { %><tr><td colspan="6" class="text-center text-muted">No hay mecánicos registrados.</td></tr><% } %>
+      <% mecanicos.forEach(m => { %>
+        <tr><td><%= m.nombre %></td><td><%= m.especialidad || '—' %></td><td><%= m.asignadas %></td><td><%= m.concluidas %></td>
+            <td><%= h.dinero(m.ingresos) %></td><td><%= m.calificacion === null ? '—' : m.calificacion.toFixed(1) + ' ★' %></td></tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>
