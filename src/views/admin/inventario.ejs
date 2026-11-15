@@ -1,0 +1,68 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">CRUD Inventario de refacciones</h1>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <ul class="nav nav-pills mb-3">
+      <% [['', 'Todos los insumos', conteo.Todos], ['Disponible', 'Disponibles', conteo.Disponible], ['Stock Bajo', 'Stock Bajo', conteo['Stock Bajo']], ['Agotado', 'Agotados', conteo.Agotado]].forEach(([v, n, c]) => { %>
+        <li class="nav-item"><a class="nav-link <%= filtro === v ? 'active' : '' %>" href="/admin/inventario?estado=<%= encodeURIComponent(v) %>&q=<%= encodeURIComponent(q) %>"><%= n %> <span class="badge text-bg-light"><%= c %></span></a></li>
+      <% }) %>
+    </ul>
+    <form class="input-group mb-3" method="get" action="/admin/inventario">
+      <input type="hidden" name="estado" value="<%= filtro %>">
+      <input class="form-control" name="q" value="<%= q %>" placeholder="Buscar por nombre de pieza" aria-label="Buscar">
+      <button class="btn btn-primary">Buscar</button>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul align-middle small">
+        <thead><tr><th>ID</th><th>Refacción / insumo</th><th>Cantidad</th><th>Mínimo</th><th>Costo</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <% if (!productos.length) { %><tr><td colspan="7" class="text-center text-muted">Sin resultados.</td></tr><% } %>
+          <% productos.forEach(p => { %>
+            <% const color = { 'Disponible': 'success', 'Stock Bajo': 'warning', 'Agotado': 'danger', 'Inactivo': 'secondary' }[p.estado]; %>
+            <tr class="<%= p.activo ? '' : 'fila-inactiva' %>">
+              <td><%= p.id_producto %></td>
+              <td><%= p.nombre %></td>
+              <td><%= p.cantidad %></td>
+              <td><%= p.stock_minimo %></td>
+              <td><%= h.dinero(p.costo) %></td>
+              <td><span class="badge text-bg-<%= color %>"><%= p.estado %></span></td>
+              <td class="text-nowrap">
+                <form class="d-inline-flex gap-1" method="post" action="/admin/inventario/<%= p.id_producto %>/entrada">
+                  <input class="form-control form-control-sm" style="width:64px" type="number" name="cantidad" min="1" value="1" aria-label="Piezas a ingresar">
+                  <button class="btn btn-sm btn-success">+ Entrada</button>
+                </form>
+                <a class="btn btn-sm btn-primary" href="/admin/inventario?estado=<%= encodeURIComponent(filtro) %>&q=<%= encodeURIComponent(q) %>&editar=<%= p.id_producto %>">Editar</a>
+                <form class="d-inline" method="post" action="/admin/inventario/<%= p.id_producto %>/estado">
+                  <button class="btn btn-sm btn-<%= p.activo ? 'danger' : 'secondary' %>"><%= p.activo ? 'Desactivar' : 'Activar' %></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="tarjeta-azul-claro p-3 small"><strong>Estado automático:</strong> Disponible = cantidad mayor al mínimo · Stock Bajo = cantidad entre 1 y el mínimo · Agotado = cantidad 0.</div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h5"><%= form.id_producto ? 'Editar producto #' + form.id_producto : 'Registrar nuevo producto' %></h2>
+      <% if (errores.length) { %><div class="alert alert-danger"><ul class="mb-0"><% errores.forEach(e => { %><li><%= e %></li><% }) %></ul></div><% } %>
+      <form method="post" action="/admin/inventario" novalidate>
+        <input type="hidden" name="id_producto" value="<%= form.id_producto || '' %>">
+        <label class="form-label" for="nombre">Nombre de la refacción</label>
+        <input class="form-control mb-2" id="nombre" name="nombre" maxlength="100" value="<%= form.nombre || '' %>" required>
+        <div class="row g-2 mb-2">
+          <div class="col-6"><label class="form-label" for="cantidad">Cantidad actual</label><input type="number" min="0" class="form-control" id="cantidad" name="cantidad" value="<%= form.cantidad ?? '' %>" required></div>
+          <div class="col-6"><label class="form-label" for="stock_minimo">Mínimo de alerta</label><input type="number" min="0" class="form-control" id="stock_minimo" name="stock_minimo" value="<%= form.stock_minimo ?? '5' %>" required></div>
+        </div>
+        <label class="form-label" for="costo">Costo unitario ($)</label>
+        <input type="number" step="0.01" min="0.01" class="form-control mb-3" id="costo" name="costo" value="<%= form.costo ?? '' %>" required>
+        <div class="d-flex gap-2">
+          <button class="btn btn-dark flex-grow-1">Guardar producto</button>
+          <% if (form.id_producto) { %><a class="btn btn-outline-secondary" href="/admin/inventario">Cancelar</a><% } %>
+        </div>
+      </form>
+    </div></div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

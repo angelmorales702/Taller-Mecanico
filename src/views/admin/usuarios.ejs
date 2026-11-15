@@ -1,0 +1,90 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">CRUD Usuarios y alta de Mecánicos / Administradores</h1>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <ul class="nav nav-pills mb-3">
+      <% [[0,'Todos'],[1,'Clientes'],[2,'Mecánicos'],[3,'Administradores']].forEach(([v, n]) => { %>
+        <li class="nav-item"><a class="nav-link <%= rol === v ? 'active' : '' %>" href="/admin/usuarios?rol=<%= v %>&q=<%= encodeURIComponent(q) %>"><%= n %></a></li>
+      <% }) %>
+    </ul>
+    <form class="input-group mb-3" method="get" action="/admin/usuarios">
+      <input type="hidden" name="rol" value="<%= rol %>">
+      <input class="form-control" name="q" value="<%= q %>" placeholder="Buscar por nombre, usuario o correo" aria-label="Buscar">
+      <button class="btn btn-primary">Buscar</button>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul align-middle small">
+        <thead><tr><th>ID</th><th>Nombre completo</th><th>Usuario</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Especialidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <% if (!usuarios.length) { %><tr><td colspan="9" class="text-center text-muted">Sin resultados.</td></tr><% } %>
+          <% usuarios.forEach(u => { %>
+            <tr class="<%= u.activo ? '' : 'fila-inactiva' %>">
+              <td><%= u.id_usuario %></td>
+              <td><%= u.nombre %> <%= u.apellidos %></td>
+              <td><%= u.usuario %></td>
+              <td><%= u.email %></td>
+              <td><%= u.telefono %></td>
+              <td><%= h.ROLES[u.id_rol] %></td>
+              <td><%= u.especialidad || '—' %></td>
+              <td><span class="badge text-bg-<%= u.activo ? 'success' : 'secondary' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td>
+              <td class="text-nowrap">
+                <a class="btn btn-sm btn-primary" href="/admin/usuarios?rol=<%= rol %>&q=<%= encodeURIComponent(q) %>&editar=<%= u.id_usuario %>">Editar</a>
+                <form class="d-inline" method="post" action="/admin/usuarios/<%= u.id_usuario %>/estado">
+                  <button class="btn btn-sm btn-<%= u.activo ? 'danger' : 'success' %>"><%= u.activo ? 'Desactivar' : 'Activar' %></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="tarjeta-azul-claro p-3 small"><strong>Regla de negocio:</strong> el registro público siempre crea Clientes. Los Mecánicos y Administradores se dan de alta únicamente aquí. El inicio de sesión acepta Usuario o Correo.</div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h5"><%= form.id_usuario ? 'Editar usuario #' + form.id_usuario : 'Crear usuario' %></h2>
+      <% if (errores.length) { %><div class="alert alert-danger"><ul class="mb-0"><% errores.forEach(e => { %><li><%= e %></li><% }) %></ul></div><% } %>
+      <form method="post" action="/admin/usuarios" class="row g-2" novalidate>
+        <input type="hidden" name="id_usuario" value="<%= form.id_usuario || '' %>">
+        <div class="col-6"><label class="form-label" for="nombre">Nombre</label><input class="form-control" id="nombre" name="nombre" maxlength="60" value="<%= form.nombre || '' %>" required></div>
+        <div class="col-6"><label class="form-label" for="apellidos">Apellidos</label><input class="form-control" id="apellidos" name="apellidos" maxlength="80" value="<%= form.apellidos || '' %>" required></div>
+        <div class="col-6"><label class="form-label" for="usuario">Usuario</label><input class="form-control" id="usuario" name="usuario" maxlength="30" value="<%= form.usuario || '' %>" required></div>
+        <div class="col-6"><label class="form-label" for="telefono">Teléfono</label><input class="form-control" id="telefono" name="telefono" inputmode="numeric" maxlength="10" value="<%= form.telefono || '' %>" required></div>
+        <div class="col-12"><label class="form-label" for="email">Correo</label><input type="email" class="form-control" id="email" name="email" maxlength="100" value="<%= form.email || '' %>" required></div>
+        <div class="col-12"><label class="form-label" for="password"><%= form.id_usuario ? 'Nueva contraseña (opcional)' : 'Contraseña inicial (mín. 8)' %></label><input type="password" class="form-control" id="password" name="password" autocomplete="new-password" <%= form.id_usuario ? '' : 'required' %>></div>
+        <div class="col-12">
+          <label class="form-label" for="id_rol">Rol</label>
+          <% if (form.id_usuario && Number(form.id_rol) === 1) { %>
+            <input class="form-control" value="Cliente" disabled><input type="hidden" name="id_rol" value="1">
+          <% } else { %>
+            <select class="form-select" id="id_rol" name="id_rol">
+              <option value="2" <%= Number(form.id_rol) === 2 ? 'selected' : '' %>>Mecánico</option>
+              <option value="3" <%= Number(form.id_rol) === 3 ? 'selected' : '' %>>Administrador</option>
+            </select>
+          <% } %>
+        </div>
+        <div class="col-12 border rounded p-2" id="campos-mecanico" style="border-style:dashed !important">
+          <small class="text-muted d-block mb-2">Solo para Mecánicos</small>
+          <label class="form-label" for="especialidad">Especialidad técnica</label>
+          <input class="form-control mb-2" id="especialidad" name="especialidad" maxlength="80" value="<%= form.especialidad || '' %>">
+          <label class="form-label" for="fecha_contratacion">Fecha de contratación</label>
+          <input type="date" class="form-control" id="fecha_contratacion" name="fecha_contratacion" value="<%= form.fecha_contratacion || '' %>">
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-dark flex-grow-1">Guardar usuario</button>
+          <% if (form.id_usuario) { %><a class="btn btn-outline-secondary" href="/admin/usuarios">Cancelar</a><% } %>
+        </div>
+      </form>
+    </div></div>
+  </div>
+</div>
+<script>
+  // Muestra los campos de mecánico solo cuando el rol elegido es Mecánico
+  const rolSel = document.getElementById('id_rol'), cm = document.getElementById('campos-mecanico');
+  const esMec = () => (rolSel ? rolSel.value === '2' : false);
+  const actualiza = () => { cm.style.display = esMec() ? '' : 'none'; };
+  if (rolSel) rolSel.addEventListener('change', actualiza);
+  actualiza();
+</script>
+<%- include('../partials/footer') %>

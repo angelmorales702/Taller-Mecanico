@@ -1,0 +1,116 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">CRUD Servicios, Categorías y Horarios</h1>
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item"><a class="nav-link <%= tab === 'servicios' ? 'active' : '' %>" href="/admin/servicios?tab=servicios">Servicios</a></li>
+  <li class="nav-item"><a class="nav-link <%= tab === 'categorias' ? 'active' : '' %>" href="/admin/servicios?tab=categorias">Categorías</a></li>
+  <li class="nav-item"><a class="nav-link <%= tab === 'horarios' ? 'active' : '' %>" href="/admin/servicios?tab=horarios">Horarios de atención</a></li>
+</ul>
+
+<% if (tab === 'servicios') { %>
+<div class="row g-4">
+  <div class="col-xl-8"><div class="table-responsive">
+    <table class="table table-striped tabla-azul align-middle small">
+      <thead><tr><th>Servicio</th><th>Categoría</th><th>Precio</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <% servicios.forEach(s => { %>
+          <tr class="<%= s.activo ? '' : 'fila-inactiva' %>">
+            <td><strong><%= s.nombre %></strong><% if (s.descripcion) { %><br><span class="text-muted"><%= s.descripcion %></span><% } %></td>
+            <td><%= s.categoria %></td><td><%= h.dinero(s.precio) %></td><td><%= s.duracion_min %> min</td>
+            <td><span class="badge text-bg-<%= s.activo ? 'success' : 'secondary' %>"><%= s.activo ? 'Visible' : 'Oculto' %></span></td>
+            <td class="text-nowrap">
+              <a class="btn btn-sm btn-primary" href="/admin/servicios?tab=servicios&editar=<%= s.id_servicio %>">Editar</a>
+              <form class="d-inline" method="post" action="/admin/servicios/<%= s.id_servicio %>/estado"><button class="btn btn-sm btn-warning"><%= s.activo ? 'Ocultar' : 'Mostrar' %></button></form>
+              <form class="d-inline" method="post" action="/admin/servicios/<%= s.id_servicio %>/eliminar" onsubmit="return confirm('¿Eliminar este servicio? Si tiene citas asociadas solo se ocultará.')"><button class="btn btn-sm btn-danger">Eliminar</button></form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div></div>
+  <div class="col-xl-4"><div class="card shadow-sm"><div class="card-body">
+    <h2 class="h5"><%= editServicio ? 'Editar servicio' : 'Nuevo servicio' %></h2>
+    <form method="post" action="/admin/servicios/guardar" novalidate>
+      <input type="hidden" name="id_servicio" value="<%= editServicio ? editServicio.id_servicio : '' %>">
+      <label class="form-label" for="nombre">Nombre</label><input class="form-control mb-2" id="nombre" name="nombre" maxlength="80" value="<%= editServicio ? editServicio.nombre : '' %>" required>
+      <label class="form-label" for="id_categoria">Categoría</label>
+      <select class="form-select mb-2" id="id_categoria" name="id_categoria">
+        <% categorias.forEach(c => { %><option value="<%= c.id_categoria %>" <%= editServicio && editServicio.id_categoria === c.id_categoria ? 'selected' : '' %>><%= c.nombre %></option><% }) %>
+      </select>
+      <div class="row g-2 mb-2">
+        <div class="col-6"><label class="form-label" for="precio">Precio ($)</label><input type="number" step="0.01" min="0.01" class="form-control" id="precio" name="precio" value="<%= editServicio ? editServicio.precio : '' %>" required></div>
+        <div class="col-6"><label class="form-label" for="duracion_min">Duración (min)</label><input type="number" min="1" class="form-control" id="duracion_min" name="duracion_min" value="<%= editServicio ? editServicio.duracion_min : '' %>" required></div>
+      </div>
+      <label class="form-label" for="descripcion">Descripción breve</label>
+      <textarea class="form-control mb-3" id="descripcion" name="descripcion" rows="2" maxlength="255"><%= editServicio ? editServicio.descripcion : '' %></textarea>
+      <div class="d-flex gap-2"><button class="btn btn-dark flex-grow-1">Guardar servicio</button>
+        <% if (editServicio) { %><a class="btn btn-outline-secondary" href="/admin/servicios?tab=servicios">Cancelar</a><% } %></div>
+    </form>
+  </div></div></div>
+</div>
+<% } %>
+
+<% if (tab === 'categorias') { %>
+<div class="row g-4">
+  <div class="col-lg-7"><table class="table table-striped tabla-azul align-middle">
+    <thead><tr><th>Categoría</th><th>Servicios</th><th>Acciones</th></tr></thead>
+    <tbody>
+      <% categorias.forEach(c => { %>
+        <tr><td><%= c.nombre %></td><td><%= c.servicios %></td>
+          <td class="text-nowrap">
+            <a class="btn btn-sm btn-primary" href="/admin/servicios?tab=categorias&editar=<%= c.id_categoria %>">Editar</a>
+            <form class="d-inline" method="post" action="/admin/categorias/<%= c.id_categoria %>/eliminar" onsubmit="return confirm('¿Eliminar esta categoría?')"><button class="btn btn-sm btn-danger">Eliminar</button></form>
+          </td></tr>
+      <% }) %>
+    </tbody></table></div>
+  <div class="col-lg-5"><div class="card shadow-sm"><div class="card-body">
+    <h2 class="h5"><%= editCategoria ? 'Editar categoría' : 'Nueva categoría' %></h2>
+    <form method="post" action="/admin/categorias/guardar" novalidate>
+      <input type="hidden" name="id_categoria" value="<%= editCategoria ? editCategoria.id_categoria : '' %>">
+      <label class="form-label" for="cnombre">Nombre</label>
+      <input class="form-control mb-3" id="cnombre" name="nombre" maxlength="50" value="<%= editCategoria ? editCategoria.nombre : '' %>" required>
+      <div class="d-flex gap-2"><button class="btn btn-dark flex-grow-1">Guardar categoría</button>
+        <% if (editCategoria) { %><a class="btn btn-outline-secondary" href="/admin/servicios?tab=categorias">Cancelar</a><% } %></div>
+    </form>
+  </div></div></div>
+</div>
+<% } %>
+
+<% if (tab === 'horarios') { %>
+<div class="row g-4">
+  <div class="col-xl-7"><div class="table-responsive"><table class="table table-striped tabla-azul align-middle small">
+    <thead><tr><th>Día / fecha</th><th>Apertura</th><th>Cierre</th><th>Capacidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>
+      <% horarios.forEach(x => { %>
+        <tr>
+          <td><%= x.dia_semana ? h.DIAS[x.dia_semana] : x.fecha_especial + ' (festivo)' %><% if (!x.dia_semana && x.descripcion) { %><br><span class="text-muted"><%= x.descripcion %></span><% } %></td>
+          <td><%= x.hora_apertura ? h.hora12(x.hora_apertura) : '—' %></td><td><%= x.hora_cierre ? h.hora12(x.hora_cierre) : '—' %></td>
+          <td><%= x.capacidad %> citas</td>
+          <td><span class="badge text-bg-<%= x.cerrado ? 'danger' : 'success' %>"><%= x.cerrado ? 'Cerrado' : 'Abierto' %></span></td>
+          <td class="text-nowrap">
+            <a class="btn btn-sm btn-primary" href="/admin/servicios?tab=horarios&editar=<%= x.id_horario %>">Editar</a>
+            <% if (!x.dia_semana) { %><form class="d-inline" method="post" action="/admin/horarios/<%= x.id_horario %>/eliminar" onsubmit="return confirm('¿Eliminar este día festivo?')"><button class="btn btn-sm btn-danger">Eliminar</button></form><% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody></table></div></div>
+  <div class="col-xl-5"><div class="card shadow-sm"><div class="card-body">
+    <h2 class="h5"><%= editHorario ? 'Editar: ' + (editHorario.dia_semana ? h.DIAS[editHorario.dia_semana] : editHorario.fecha_especial) : 'Agregar día festivo' %></h2>
+    <form method="post" action="/admin/horarios/guardar" novalidate>
+      <input type="hidden" name="id_horario" value="<%= editHorario ? editHorario.id_horario : '' %>">
+      <% if (!editHorario) { %><label class="form-label" for="fecha_especial">Fecha</label><input type="date" class="form-control mb-2" id="fecha_especial" name="fecha_especial" required><% } %>
+      <div class="row g-2 mb-2">
+        <div class="col-6"><label class="form-label" for="hora_apertura">Apertura</label><input type="time" class="form-control" id="hora_apertura" name="hora_apertura" value="<%= editHorario && editHorario.hora_apertura ? editHorario.hora_apertura.slice(0, 5) : '' %>"></div>
+        <div class="col-6"><label class="form-label" for="hora_cierre">Cierre</label><input type="time" class="form-control" id="hora_cierre" name="hora_cierre" value="<%= editHorario && editHorario.hora_cierre ? editHorario.hora_cierre.slice(0, 5) : '' %>"></div>
+      </div>
+      <label class="form-label" for="capacidad">Capacidad de citas simultáneas</label>
+      <input type="number" min="0" class="form-control mb-2" id="capacidad" name="capacidad" value="<%= editHorario ? editHorario.capacidad : (editHorario === undefined ? 0 : 0) %>" required>
+      <label class="form-label" for="descripcion">Descripción</label>
+      <input class="form-control mb-2" id="descripcion" name="descripcion" maxlength="100" value="<%= editHorario ? editHorario.descripcion || '' : '' %>">
+      <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="cerrado" name="cerrado" value="1" <%= (!editHorario || editHorario.cerrado) ? 'checked' : '' %>><label class="form-check-label" for="cerrado">Cerrado todo el día</label></div>
+      <div class="d-flex gap-2"><button class="btn btn-dark flex-grow-1">Guardar horario</button>
+        <% if (editHorario) { %><a class="btn btn-outline-secondary" href="/admin/servicios?tab=horarios">Cancelar</a><% } %></div>
+    </form>
+  </div></div></div>
+</div>
+<% } %>
+<%- include('../partials/footer') %>
