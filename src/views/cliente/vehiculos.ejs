@@ -1,0 +1,183 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Mis vehículos y citas</h1>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="tarjeta-azul p-4 mb-4">
+      <h2 class="h5 text-center mb-3"><%= editando ? 'Editar vehículo' : 'Registrar vehículo' %></h2>
+      <% erroresVeh.forEach(e => { %><div class="alert alert-danger py-2 small"><%= e %></div><% }) %>
+      <form method="post" action="/cliente/vehiculos/guardar" novalidate>
+        <input type="hidden" name="id_vehiculo" value="<%= formVeh.id_vehiculo || '' %>">
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label">Marca</label><input class="form-control" name="marca" maxlength="40" value="<%= formVeh.marca || '' %>" required></div>
+          <div class="col-6"><label class="form-label">Modelo</label><input class="form-control" name="modelo" maxlength="40" value="<%= formVeh.modelo || '' %>" required></div>
+          <div class="col-4"><label class="form-label">Año</label><input class="form-control" name="anio" inputmode="numeric" maxlength="4" value="<%= formVeh.anio || '' %>" required></div>
+          <div class="col-8"><label class="form-label">Placas</label><input class="form-control text-uppercase" name="placas" maxlength="15" value="<%= formVeh.placas || '' %>" required></div>
+          <div class="col-12"><label class="form-label">Color (opcional)</label><input class="form-control" name="color" maxlength="30" value="<%= formVeh.color || '' %>"></div>
+        </div>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          <button class="btn btn-dark"><%= editando ? 'Guardar cambios' : '+ Guardar vehículo' %></button>
+          <% if (editando) { %><a class="btn btn-outline-light" href="/cliente/vehiculos">Cancelar</a><% } %>
+        </div>
+      </form>
+    </div>
+
+    <h2 class="h5">Mis vehículos</h2>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul align-middle small">
+        <thead><tr><th>Vehículo</th><th>Placas</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <% if (!vehiculos.length) { %><tr><td colspan="3" class="text-center text-muted">Aún no registras vehículos.</td></tr><% } %>
+          <% vehiculos.forEach(v => { %>
+            <tr>
+              <td><%= v.marca %> <%= v.modelo %> <%= v.anio %><% if (v.color) { %><br><span class="text-muted"><%= v.color %></span><% } %></td>
+              <td><%= v.placas %></td>
+              <td class="text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="/cliente/vehiculos?editar=<%= v.id_vehiculo %>">Editar datos</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/cliente/vehiculos?historial=<%= v.id_vehiculo %>#historial">Historial</a>
+                <form class="d-inline" method="post" action="/cliente/vehiculos/<%= v.id_vehiculo %>/baja" onsubmit="return confirm('¿Dar de baja este vehículo?')">
+                  <button class="btn btn-sm btn-outline-danger">Dar de baja</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="tarjeta-azul-claro p-4 mb-4">
+      <h2 class="h5 text-center mb-3">Agendar una cita</h2>
+      <% erroresCita.forEach(e => { %><div class="alert alert-danger py-2 small"><%= e %></div><% }) %>
+      <% if (!vehiculos.length) { %>
+        <p class="text-muted mb-0">Primero registra un vehículo para poder agendar.</p>
+      <% } else { %>
+      <form method="post" action="/cliente/citas/agendar" id="formCita" novalidate>
+        <label class="form-label">Vehículo</label>
+        <select class="form-select mb-3" name="id_vehiculo" required>
+          <option value="">Elige un vehículo</option>
+          <% vehiculos.forEach(v => { %>
+            <option value="<%= v.id_vehiculo %>" <%= Number(formCita.id_vehiculo) === v.id_vehiculo ? 'selected' : '' %>><%= v.marca %> <%= v.modelo %> · <%= v.placas %></option>
+          <% }) %>
+        </select>
+
+        <label class="form-label">Servicios (uno o varios)</label>
+        <div class="border rounded bg-white p-2 mb-3" style="max-height: 220px; overflow-y: auto;">
+          <% let cat = ''; servicios.forEach(s => { %>
+            <% if (s.categoria !== cat) { cat = s.categoria; %><div class="fw-bold small text-primary mt-1"><%= cat %></div><% } %>
+            <div class="form-check">
+              <input class="form-check-input srv" type="checkbox" name="servicios" value="<%= s.id_servicio %>" id="s<%= s.id_servicio %>" data-precio="<%= s.precio %>"
+                <%= (formCita.servicios || []).includes(s.id_servicio) ? 'checked' : '' %>>
+              <label class="form-check-label small" for="s<%= s.id_servicio %>"><%= s.nombre %> — <%= h.dinero(s.precio) %> · <%= s.duracion_min %> min</label>
+            </div>
+          <% }) %>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label">Fecha</label>
+            <input class="form-control" type="date" name="fecha" id="fecha" min="<%= hoy %>" value="<%= formCita.fecha || '' %>" required>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Bloque de horario</label>
+            <select class="form-select" name="hora" id="hora" data-sel="<%= formCita.hora || '' %>" required>
+              <option value="">Elige primero la fecha</option>
+            </select>
+          </div>
+          <div class="col-12 small text-muted" id="avisoHorario"></div>
+        </div>
+
+        <label class="form-label">Observaciones del síntoma (opcional)</label>
+        <textarea class="form-control mb-2" name="observaciones" rows="2" maxlength="255" placeholder="Ej. Hace ruido al frenar"><%= formCita.observaciones || '' %></textarea>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" name="llamada" value="1" id="llamada" <%= formCita.llamada ? 'checked' : '' %>>
+          <label class="form-check-label small" for="llamada">Quiero que el taller me llame para confirmar</label>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+          <strong>Subtotal estimado: <span id="subtotal">$0.00</span></strong>
+          <button class="btn btn-primary">Confirmar reservación de cita</button>
+        </div>
+      </form>
+      <% } %>
+    </div>
+
+    <h2 class="h5">Mis citas</h2>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul align-middle small">
+        <thead><tr><th>Fecha</th><th>Vehículo</th><th>Servicios</th><th>Estatus</th><th></th></tr></thead>
+        <tbody>
+          <% if (!citas.length) { %><tr><td colspan="5" class="text-center text-muted">Aún no tienes citas.</td></tr><% } %>
+          <% citas.forEach(c => { %>
+            <tr class="<%= c.estatus_cita === 'Cancelada' ? 'fila-inactiva' : '' %>">
+              <td class="text-nowrap"><%= c.fecha_hora.slice(0, 10) %><br><%= h.hora12(c.fecha_hora.slice(11)) %></td>
+              <td><%= c.marca %> <%= c.modelo %></td>
+              <td><%= c.servicios %></td>
+              <td><span class="badge text-bg-<%= c.estatus_cita === 'Cancelada' ? 'secondary' : 'primary' %>"><%= c.estatus_cita %></span>
+                  <% if (c.estatus_vehiculo) { %><br><span class="text-muted"><%= c.estatus_vehiculo %></span><% } %></td>
+              <td><a class="btn btn-sm btn-outline-primary" href="/cliente/seguimiento?cita=<%= c.id_cita %>">Ver</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<% if (historial) { %>
+<section id="historial" class="mt-4">
+  <h2 class="h5">Historial de <%= histVeh.marca %> <%= histVeh.modelo %> (<%= histVeh.placas %>)</h2>
+  <div class="table-responsive">
+    <table class="table table-striped tabla-azul small align-middle">
+      <thead><tr><th>Fecha</th><th>Servicios</th><th>Estatus</th><th>Total</th></tr></thead>
+      <tbody>
+        <% if (!historial.length) { %><tr><td colspan="4" class="text-center text-muted">Este vehículo aún no tiene servicios.</td></tr><% } %>
+        <% historial.forEach(c => { %>
+          <tr><td><%= c.fecha_hora.slice(0, 10) %></td><td><%= c.servicios %></td><td><%= c.estatus_cita %> · <%= c.estatus_vehiculo %></td><td><%= h.dinero(c.total) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<% } %>
+
+<script>
+(function () {
+  var fecha = document.getElementById('fecha'), hora = document.getElementById('hora');
+  if (!fecha) return;
+  var aviso = document.getElementById('avisoHorario');
+  function cargarHoras() {
+    var sel = hora.getAttribute('data-sel') || hora.value;
+    hora.innerHTML = '<option value="">Elige un horario</option>';
+    aviso.textContent = '';
+    if (!fecha.value) return;
+    fetch('/cliente/horas?fecha=' + encodeURIComponent(fecha.value), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.cerrado) { aviso.textContent = d.motivo; return; }
+        d.horas.forEach(function (x) {
+          var o = document.createElement('option');
+          o.value = x.valor;
+          o.textContent = x.etiqueta + (x.libres ? ' (' + x.libres + ' lugares)' : ' (lleno)');
+          o.disabled = !x.libres;
+          if (x.valor === sel) o.selected = true;
+          hora.appendChild(o);
+        });
+        if (!d.horas.length) aviso.textContent = 'Ya no hay bloques disponibles ese día.';
+      });
+    hora.removeAttribute('data-sel');
+  }
+  fecha.addEventListener('change', function () { hora.removeAttribute('data-sel'); cargarHoras(); });
+  cargarHoras();
+
+  var subtotal = document.getElementById('subtotal');
+  function calc() {
+    var total = 0;
+    document.querySelectorAll('.srv:checked').forEach(function (c) { total += Number(c.getAttribute('data-precio')); });
+    subtotal.textContent = total.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+  }
+  document.querySelectorAll('.srv').forEach(function (c) { c.addEventListener('change', calc); });
+  calc();
+})();
+</script>
+<%- include('../partials/footer') %>

@@ -1,0 +1,137 @@
+<%- include('../partials/header') %>
+<h1 class="h3 text-primary fw-bold mb-3">Seguimiento, presupuesto y reseñas</h1>
+
+<% if (!cita) { %>
+  <div class="alert alert-info">Aún no tienes citas. <a href="/cliente/vehiculos">Agenda tu primera cita</a>.</div>
+<% } else { %>
+<form class="row g-2 align-items-end mb-4" method="get" action="/cliente/seguimiento">
+  <div class="col-md-8">
+    <label class="form-label fw-bold">Cita</label>
+    <select class="form-select" name="cita" onchange="this.form.submit()">
+      <% lista.forEach(c => { %>
+        <option value="<%= c.id_cita %>" <%= c.id_cita === cita.id_cita ? 'selected' : '' %>>#<%= c.id_cita %> · <%= c.fecha_hora.slice(0, 10) %> · <%= c.marca %> <%= c.modelo %> (<%= c.placas %>)</option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-md-4"><noscript><button class="btn btn-primary">Ver</button></noscript></div>
+</form>
+
+<div class="tarjeta-azul p-4 mb-4">
+  <div class="row g-2">
+    <div class="col-md-4"><div class="small">Vehículo</div><strong><%= cita.marca %> <%= cita.modelo %> · <%= cita.placas %></strong></div>
+    <div class="col-md-4"><div class="small">Fecha y hora</div><strong><%= cita.fecha_hora.slice(0, 10) %> · <%= h.hora12(cita.fecha_hora.slice(11)) %></strong></div>
+    <div class="col-md-4"><div class="small">Mecánico</div><strong><%= cita.mecanico || 'Por asignar' %></strong></div>
+    <% if (cita.observaciones) { %><div class="col-12"><div class="small">Observaciones</div><%= cita.observaciones %></div><% } %>
+  </div>
+</div>
+
+<% if (cita.estatus_cita === 'Cancelada') { %>
+  <div class="alert alert-secondary">Esta cita fue <strong>cancelada</strong>.</div>
+<% } %>
+
+<h2 class="h5">Estatus del vehículo</h2>
+<ol class="list-unstyled d-flex flex-wrap gap-2 mb-4">
+  <% estatus.forEach(e => { const hecho = e.id_estatus_vehiculo <= cita.id_estatus_vehiculo; const actual = e.id_estatus_vehiculo === cita.id_estatus_vehiculo; %>
+    <li class="flex-fill text-center p-2 rounded border <%= actual ? 'bg-primary text-white fw-bold' : (hecho ? 'bg-success-subtle' : 'bg-white text-muted') %>">
+      <%= hecho && !actual ? '✔ ' : '' %><%= e.nombre %>
+    </li>
+  <% }) %>
+</ol>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <h2 class="h5">Bitácora técnica</h2>
+    <div class="table-responsive">
+      <table class="table table-striped tabla-azul small align-middle">
+        <thead><tr><th>Fecha</th><th>Estatus</th><th>Comentario</th></tr></thead>
+        <tbody>
+          <% if (!bitacora.length) { %><tr><td colspan="3" class="text-center text-muted">Sin movimientos.</td></tr><% } %>
+          <% bitacora.forEach(b => { %>
+            <tr><td class="text-nowrap"><%= b.fecha_hora.slice(0, 16) %></td><td><%= b.estatus %></td>
+                <td><%= b.comentario %><br><span class="text-muted"><%= b.autor %></span></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <h2 class="h5">Presupuesto</h2>
+    <div class="table-responsive">
+      <table class="table tabla-azul small align-middle">
+        <thead><tr><th>Concepto</th><th class="text-end">Importe</th></tr></thead>
+        <tbody>
+          <% servicios.forEach(s => { %><tr><td><%= s.nombre %></td><td class="text-end"><%= h.dinero(s.precio_aplicado) %></td></tr><% }) %>
+          <% refacciones.forEach(r => { %>
+            <tr>
+              <td><%= r.descripcion %> × <%= r.cantidad %>
+                <% if (r.aprobada === 1) { %><span class="badge text-bg-success">Aprobada</span>
+                <% } else if (r.aprobada === 0) { %><span class="badge text-bg-secondary">Rechazada</span>
+                <% } else { %><span class="badge text-bg-warning">Por aprobar</span><% } %></td>
+              <td class="text-end <%= r.aprobada === 0 ? 'text-decoration-line-through text-muted' : '' %>"><%= h.dinero(linea(r)) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <% if (totPendiente > 0) { %><tr><td>Por aprobar</td><td class="text-end"><%= h.dinero(totPendiente) %></td></tr><% } %>
+          <tr class="fw-bold"><td>Total actualizado</td><td class="text-end"><%= h.dinero(total) %></td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <% if (cita.estatus_cita !== 'Cancelada') { %>
+    <div class="d-flex flex-wrap gap-2">
+      <% if (hayPendientes) { %>
+        <form method="post" action="/cliente/seguimiento/<%= cita.id_cita %>/cargos">
+          <input type="hidden" name="decision" value="aprobar">
+          <button class="btn btn-success">✓ Aprobar cargos extras y continuar reparación</button>
+        </form>
+        <form method="post" action="/cliente/seguimiento/<%= cita.id_cita %>/cargos" onsubmit="return confirm('¿Rechazar los cargos extras?')">
+          <input type="hidden" name="decision" value="rechazar">
+          <button class="btn btn-outline-danger">Rechazar cargos</button>
+        </form>
+      <% } %>
+      <% if (cita.llamada_solicitada) { %>
+        <span class="badge text-bg-info align-self-center">☎ Llamada solicitada</span>
+      <% } else { %>
+        <form method="post" action="/cliente/seguimiento/<%= cita.id_cita %>/llamada">
+          <button class="btn btn-outline-primary">☎ Solicitar llamada aclaratoria al taller</button>
+        </form>
+      <% } %>
+      <% if (cita.estatus_cita === 'Pendiente') { %>
+        <form method="post" action="/cliente/seguimiento/<%= cita.id_cita %>/cancelar" onsubmit="return confirm('¿Cancelar esta cita?')">
+          <button class="btn btn-outline-danger">Cancelar cita</button>
+        </form>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (cita.id_estatus_vehiculo === 6) { %>
+<section class="mt-4">
+  <h2 class="h5">Tu reseña</h2>
+  <% if (resena) { %>
+    <div class="tarjeta-azul-claro p-3">
+      <div class="estrellas"><%= '★'.repeat(resena.calificacion) %><%= '☆'.repeat(5 - resena.calificacion) %></div>
+      <div><%= resena.comentario %></div>
+    </div>
+  <% } else { %>
+    <form class="tarjeta-azul-claro p-3" method="post" action="/cliente/seguimiento/<%= cita.id_cita %>/resena">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Calificación</label>
+          <select class="form-select" name="calificacion" required>
+            <option value="">Elige</option>
+            <% [5, 4, 3, 2, 1].forEach(n => { %><option value="<%= n %>"><%= '★'.repeat(n) %> (<%= n %>)</option><% }) %>
+          </select>
+        </div>
+        <div class="col-md-7"><label class="form-label">Comentario (opcional)</label><input class="form-control" name="comentario" maxlength="255"></div>
+        <div class="col-md-2"><button class="btn btn-primary w-100">Enviar</button></div>
+      </div>
+    </form>
+  <% } %>
+</section>
+<% } %>
+<% } %>
+<%- include('../partials/footer') %>
