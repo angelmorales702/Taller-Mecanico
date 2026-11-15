@@ -5,6 +5,8 @@ const router = require('express').Router();
 const db = require('../db');
 const { t, entero, esFecha, hora12, ah } = require('../helpers');
 
+// id numérico seguro para consultas: si no es un número válido devuelve 0 (nunca coincide con ningún registro)
+const idSeguro = (v) => { const n = entero(v); return Number.isNaN(n) ? 0 : n; };
 const pad = (n) => String(n).padStart(2, '0');
 const hoy = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 const minutos = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
@@ -128,7 +130,7 @@ router.post('/vehiculos/guardar', ah(async (req, res) => {
 // Baja lógica (no se borra el registro para conservar el historial)
 router.post('/vehiculos/:id/baja', ah(async (req, res) => {
   const idc = req.session.user.id;
-  const idv = entero(req.params.id);
+  const idv = idSeguro(req.params.id);
   const [mio] = await db.query('SELECT 1 FROM vehiculos WHERE id_vehiculo = ? AND id_usuario = ? AND activo = 1', [idv, idc]);
   if (!mio.length) req.session.flash = { tipo: 'danger', msg: 'Ese vehículo no es tuyo o ya no existe.' };
   else {
@@ -147,7 +149,7 @@ router.post('/vehiculos/:id/baja', ah(async (req, res) => {
 router.post('/citas/agendar', ah(async (req, res) => {
   const idc = req.session.user.id;
   const f = {
-    id_vehiculo: entero(req.body.id_vehiculo), fecha: t(req.body.fecha), hora: t(req.body.hora),
+    id_vehiculo: idSeguro(req.body.id_vehiculo), fecha: t(req.body.fecha), hora: t(req.body.hora),
     observaciones: t(req.body.observaciones), llamada: req.body.llamada ? 1 : 0,
     servicios: [...new Set([].concat(req.body.servicios || []).map(entero))],
   };
@@ -257,7 +259,7 @@ const volver = (res, id) => res.redirect(`/cliente/seguimiento?cita=${id}`);
 
 // Aprobar o rechazar los cargos extras pendientes (usa sp_responder_refaccion, que descuenta el inventario al aprobar)
 router.post('/seguimiento/:id/cargos', ah(async (req, res) => {
-  const cita = await miCita(entero(req.params.id), req.session.user.id);
+  const cita = await miCita(idSeguro(req.params.id), req.session.user.id);
   if (!cita) { req.session.flash = { tipo: 'danger', msg: 'Esa cita no existe.' }; return res.redirect('/cliente/seguimiento'); }
   if (cita.id_estatus_cita === 3) req.session.flash = { tipo: 'warning', msg: 'La cita está cancelada.' };
   else {
@@ -280,7 +282,7 @@ router.post('/seguimiento/:id/cargos', ah(async (req, res) => {
 
 // Aviso para que el taller llame al cliente
 router.post('/seguimiento/:id/llamada', ah(async (req, res) => {
-  const cita = await miCita(entero(req.params.id), req.session.user.id);
+  const cita = await miCita(idSeguro(req.params.id), req.session.user.id);
   if (!cita) return res.redirect('/cliente/seguimiento');
   await db.query('UPDATE citas SET llamada_solicitada = 1 WHERE id_cita = ? AND id_cliente = ?', [cita.id_cita, req.session.user.id]);
   req.session.flash = { tipo: 'success', msg: 'Listo, el taller te llamará para aclarar tus dudas.' };
@@ -289,7 +291,7 @@ router.post('/seguimiento/:id/llamada', ah(async (req, res) => {
 
 // Cancelar: solo mientras la cita esté Pendiente
 router.post('/seguimiento/:id/cancelar', ah(async (req, res) => {
-  const cita = await miCita(entero(req.params.id), req.session.user.id);
+  const cita = await miCita(idSeguro(req.params.id), req.session.user.id);
   if (!cita) return res.redirect('/cliente/seguimiento');
   const [r] = await db.query('UPDATE citas SET id_estatus_cita = 3 WHERE id_cita = ? AND id_cliente = ? AND id_estatus_cita = 1', [cita.id_cita, req.session.user.id]);
   req.session.flash = r.affectedRows
@@ -300,7 +302,7 @@ router.post('/seguimiento/:id/cancelar', ah(async (req, res) => {
 
 // Reseña: solo con el vehículo Entregado, una por cita
 router.post('/seguimiento/:id/resena', ah(async (req, res) => {
-  const cita = await miCita(entero(req.params.id), req.session.user.id);
+  const cita = await miCita(idSeguro(req.params.id), req.session.user.id);
   if (!cita) return res.redirect('/cliente/seguimiento');
   const cal = entero(req.body.calificacion);
   const comentario = t(req.body.comentario);
