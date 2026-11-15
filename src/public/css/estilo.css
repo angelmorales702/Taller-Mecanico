@@ -1,0 +1,15 @@
+:root { --azul: #1f5f9a; --azul-oscuro: #165a80; --azul-claro: #e8f0f8; }
+body { background: #f6f8fb; }
+.barra { background: var(--azul-oscuro); }
+.pie { background: var(--azul-oscuro); }
+.logo-circulo { width: 220px; height: 220px; border-radius: 50%; background: var(--azul-oscuro); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 4rem; flex-shrink: 0; }
+.tabla-azul thead th { background: var(--azul); color: #fff; border-color: var(--azul); }
+.tarjeta-azul { background: var(--azul); color: #fff; border-radius: .75rem; }
+.tarjeta-azul .form-label { color: #fff; }
+.tarjeta-azul-claro { background: var(--azul-claro); border-radius: .75rem; }
+.estrellas { color: #f5a623; letter-spacing: 2px; }
+.nav-pills .nav-link { color: var(--azul-oscuro); }
+.nav-pills .nav-link.active { background: var(--azul-oscuro); }
+.nav-tabs .nav-link { color: var(--azul-oscuro); }
+.fila-inactiva { opacity: .55; }
