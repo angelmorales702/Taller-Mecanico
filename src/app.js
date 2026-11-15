@@ -39,6 +39,8 @@ app.use('/cuenta', requireLogin, require('./routes/cuenta'));
 app.use('/cliente', requireRole(1), require('./routes/cliente'));
 app.use('/mecanico', requireRole(2), require('./routes/mecanico'));
 app.use('/admin/citas', requireRole(3), require('./routes/admin-citas'));
+app.use('/admin/contacto', requireRole(3), require('./routes/admin-contacto'));
+app.use('/admin/reportes', requireRole(3), require('./routes/admin-reportes'));
 app.use('/admin', requireRole(3), require('./routes/admin'));
 
 app.use((req, res) => res.status(404).render('error', { titulo: 'No encontrada', codigo: 404, mensaje: 'La página que buscas no existe.' }));

@@ -43,7 +43,7 @@ src/app.js     servidor Express, sesiones y manejo de errores
 src/db.js      pool de conexiones MySQL
 src/helpers.js validaciones y formato (teléfono, correo, horas, dinero)
 src/middleware/auth.js   requireLogin / requireRole
-src/routes/    publico.js · auth.js · cuenta.js · cliente.js · mecanico.js · admin-citas.js · admin.js
+src/routes/    publico.js · auth.js · cuenta.js · cliente.js · mecanico.js · admin-citas.js · admin-contacto.js · admin-reportes.js · admin.js
 src/views/     plantillas EJS (partials/ = navbar y footer, cliente/ = pantallas 8 y 9, mecanico/ = pantallas 11 y 12, admin/ = CRUD)
 src/public/    CSS
 ```
@@ -56,9 +56,11 @@ src/public/    CSS
 - 9 Seguimiento, presupuesto y reseñas (cliente): línea de tiempo de estatus, bitácora, presupuesto con aprobación de cargos extras (`sp_responder_refaccion`), llamada aclaratoria, cancelar cita Pendiente y reseña al ser Entregado
 - 10 Mi cuenta del mecánico · 11 Mis citas asignadas (filtro hoy / semana, historial del auto) · 12 Orden de trabajo: cambio de estatus con comentario técnico (`sp_actualizar_estatus_vehiculo`), consumo de refacciones del almacén (descuenta stock), cargos extra sujetos a aprobación del cliente y quitar cargos
 - 15 Citas y vehículos (administrador): asignar mecánico, confirmar/cancelar citas, editar y dar de baja vehículos
+- 17 Contacto y reseñas (administrador): edita los datos públicos de contacto (se reflejan en Contacto y en el pie) y modera la visibilidad de las reseñas en Inicio, con paginación
+- 19 Reportes estadísticos (administrador): ingresos y citas por mes y año, calificación promedio, alertas de stock, estatus del inventario y rendimiento por mecánico (solo cuentan citas Entregadas)
 - 14 **CRUD Usuarios** · 18 **CRUD Inventario** · 16 **CRUD Servicios, Categorías y Horarios**
 
-Pendientes: 17 (contacto y reseñas), 19 (reportes).
+
 
 ## Seguridad implementada
 - Contraseñas con bcrypt; mensaje de error genérico en el login; sesión regenerada al iniciar.
