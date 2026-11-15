@@ -43,8 +43,8 @@ src/app.js     servidor Express, sesiones y manejo de errores
 src/db.js      pool de conexiones MySQL
 src/helpers.js validaciones y formato (teléfono, correo, horas, dinero)
 src/middleware/auth.js   requireLogin / requireRole
-src/routes/    publico.js · auth.js · cuenta.js · cliente.js · admin.js
-src/views/     plantillas EJS (partials/ = navbar y footer, cliente/ = pantallas 8 y 9, admin/ = CRUD)
+src/routes/    publico.js · auth.js · cuenta.js · cliente.js · mecanico.js · admin-citas.js · admin.js
+src/views/     plantillas EJS (partials/ = navbar y footer, cliente/ = pantallas 8 y 9, mecanico/ = pantallas 11 y 12, admin/ = CRUD)
 src/public/    CSS
 ```
 
@@ -54,9 +54,11 @@ src/public/    CSS
 - 7 / 10 / 13 Mi cuenta (cliente, mecánico y administrador)
 - 8 Mis vehículos y citas (cliente): alta, edición, baja lógica e historial de vehículos; agendar cita con varios servicios, bloques de horario según la tabla `horarios` y capacidad
 - 9 Seguimiento, presupuesto y reseñas (cliente): línea de tiempo de estatus, bitácora, presupuesto con aprobación de cargos extras (`sp_responder_refaccion`), llamada aclaratoria, cancelar cita Pendiente y reseña al ser Entregado
+- 10 Mi cuenta del mecánico · 11 Mis citas asignadas (filtro hoy / semana, historial del auto) · 12 Orden de trabajo: cambio de estatus con comentario técnico (`sp_actualizar_estatus_vehiculo`), consumo de refacciones del almacén (descuenta stock), cargos extra sujetos a aprobación del cliente y quitar cargos
+- 15 Citas y vehículos (administrador): asignar mecánico, confirmar/cancelar citas, editar y dar de baja vehículos
 - 14 **CRUD Usuarios** · 18 **CRUD Inventario** · 16 **CRUD Servicios, Categorías y Horarios**
 
-Pendientes: 11 y 12 (mecánico), 15 (citas y vehículos), 17 (contacto y reseñas), 19 (reportes).
+Pendientes: 17 (contacto y reseñas), 19 (reportes).
 
 ## Seguridad implementada
 - Contraseñas con bcrypt; mensaje de error genérico en el login; sesión regenerada al iniciar.

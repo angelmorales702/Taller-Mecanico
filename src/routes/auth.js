@@ -5,7 +5,7 @@ const db = require('../db');
 const { t, esEmail, esTel, esUsuario, ah } = require('../helpers');
 
 const guest = (req, res, next) => (req.session.user ? res.redirect(destino(req.session.user)) : next());
-const destino = (u) => (u.rol === 3 ? '/admin/usuarios' : u.rol === 1 ? '/cliente/vehiculos' : '/cuenta');
+const destino = (u) => (u.rol === 3 ? '/admin/usuarios' : u.rol === 1 ? '/cliente/vehiculos' : u.rol === 2 ? '/mecanico/citas' : '/cuenta');
 
 router.get('/registro', guest, (req, res) => res.render('registro', { titulo: 'Crear cuenta', form: {}, errores: [] }));
 

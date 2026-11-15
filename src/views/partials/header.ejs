@@ -19,8 +19,13 @@
       <ul class="navbar-nav me-auto">
         <% if (user && user.rol === 3) { %>
           <li class="nav-item"><a class="nav-link <%= activo('/admin/usuarios') %>" href="/admin/usuarios">CRUD Usuarios</a></li>
+          <li class="nav-item"><a class="nav-link <%= activo('/admin/citas') %>" href="/admin/citas">CRUD Citas y Vehículos</a></li>
           <li class="nav-item"><a class="nav-link <%= activo('/admin/inventario') %>" href="/admin/inventario">CRUD Inventario</a></li>
           <li class="nav-item"><a class="nav-link <%= activo('/admin/servicios') %>" href="/admin/servicios">CRUD Servicios y Horarios</a></li>
+        <% } else if (user && user.rol === 2) { %>
+          <li class="nav-item"><a class="nav-link <%= activo('/mecanico/citas') %>" href="/mecanico/citas">Mis citas asignadas</a></li>
+          <li class="nav-item"><a class="nav-link <%= activo('/mecanico/orden') %>" href="/mecanico/orden">Orden de trabajo</a></li>
+          <li class="nav-item"><a class="nav-link" href="/mecanico/orden#refacciones">Consumo de refacciones</a></li>
         <% } else { %>
           <li class="nav-item"><a class="nav-link <%= path === '/' ? 'active' : '' %>" href="/">Inicio</a></li>
           <li class="nav-item"><a class="nav-link <%= activo('/horarios') %>" href="/horarios">Horarios</a></li>
