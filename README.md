@@ -43,8 +43,8 @@ src/app.js     servidor Express, sesiones y manejo de errores
 src/db.js      pool de conexiones MySQL
 src/helpers.js validaciones y formato (teléfono, correo, horas, dinero)
 src/middleware/auth.js   requireLogin / requireRole
-src/routes/    publico.js · auth.js · cuenta.js · admin.js
-src/views/     plantillas EJS (partials/ = navbar y footer, admin/ = CRUD)
+src/routes/    publico.js · auth.js · cuenta.js · cliente.js · admin.js
+src/views/     plantillas EJS (partials/ = navbar y footer, cliente/ = pantallas 8 y 9, admin/ = CRUD)
 src/public/    CSS
 ```
 
@@ -52,9 +52,11 @@ src/public/    CSS
 - Públicas: 1 Inicio, 2 Horarios, 3 Servicios, 4 Contacto (datos desde la BD)
 - 5 Registro (solo clientes) · 6 Iniciar sesión (usuario o correo)
 - 7 / 10 / 13 Mi cuenta (cliente, mecánico y administrador)
+- 8 Mis vehículos y citas (cliente): alta, edición, baja lógica e historial de vehículos; agendar cita con varios servicios, bloques de horario según la tabla `horarios` y capacidad
+- 9 Seguimiento, presupuesto y reseñas (cliente): línea de tiempo de estatus, bitácora, presupuesto con aprobación de cargos extras (`sp_responder_refaccion`), llamada aclaratoria, cancelar cita Pendiente y reseña al ser Entregado
 - 14 **CRUD Usuarios** · 18 **CRUD Inventario** · 16 **CRUD Servicios, Categorías y Horarios**
 
-Pendientes (Nivel 2 y 3): 8 y 9 (cliente), 11 y 12 (mecánico), 15 (citas y vehículos), 17 (contacto y reseñas), 19 (reportes).
+Pendientes: 11 y 12 (mecánico), 15 (citas y vehículos), 17 (contacto y reseñas), 19 (reportes).
 
 ## Seguridad implementada
 - Contraseñas con bcrypt; mensaje de error genérico en el login; sesión regenerada al iniciar.
